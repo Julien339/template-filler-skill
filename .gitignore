@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Pipeline output (generated files, templates, and content maps — never
+# source-controlled; a template-filler run always operates on files that
+# belong to whoever is using the skill, not to this repo)
+*.pptx
+*.docx
+*.pdf
+work/
+*.content_map.json
+*_map.json
+*/preview/
+
+# OS cruft
+.DS_Store
+Thumbs.db
