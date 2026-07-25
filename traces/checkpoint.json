@@ -1,0 +1,1 @@
+{"plan":"template-filler-mcp-v1","task_id":"T1.1","trace_id":"91936d2c-3e90-4f61-a6e0-3ef5ff2a3f5a","status":"COMPLETED","git_commit":"b03dcce","files_modified":["pyproject.toml","template_filler_mcp/__init__.py",".gitignore"],"started_at":"2026-07-25T00:00:00Z","completed_at":"2026-07-25T08:49:56Z","duration_ms":0}
