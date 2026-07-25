@@ -132,3 +132,74 @@ python scripts/render_preview.py <output.pptx> work/preview --pages <touched sli
   in a pptx text box with shrink-to-fit, the box may look visually off even
   though the write itself is correct — this is exactly why the
   render-preview review step in Stage 4 isn't optional.
+
+## MCP Server Usage
+
+This skill is also available as a standalone MCP server (`template-filler-mcp`)
+that exposes the same pipeline as 8 MCP tools — usable by any MCP-compatible
+agent (Claude Desktop, VS Code Copilot, etc.) without running shell commands.
+
+### Installation
+
+```bash
+pip install -e /path/to/template-filler-skill
+```
+
+### MCP Configuration
+
+Add to your MCP client's configuration:
+
+```json
+{
+  "mcpServers": {
+    "template-filler": {
+      "command": "template-filler-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+Or run the server directly:
+
+```bash
+python -m template_filler_mcp.server
+```
+
+### Available Tools
+
+| Tool | Stage | Description |
+|------|-------|-------------|
+| `extract_pptx` | Extract | Read all text runs from a .pptx as structured JSON |
+| `extract_docx` | Extract | Read all text runs from a .docx as structured JSON |
+| `apply_pptx` | Apply | Write changes into specific runs, preserving formatting |
+| `apply_docx` | Apply | Same for .docx |
+| `verify_pptx` | Verify | Structural/XML integrity check |
+| `verify_docx` | Verify | Same for .docx |
+| `verify_parity_tool` | Verify | Assert output matches original except changes |
+| `render_preview` | Verify | Render slides/pages to PNG (requires LibreOffice) |
+
+### CLI
+
+A standalone CLI is also available with the same tools:
+
+```bash
+template-filler extract pptx template.pptx
+template-filler apply pptx template.pptx --changes changes.json output.pptx
+template-filler verify pptx output.pptx
+template-filler parity original.pptx output.pptx --changes changes.json
+template-filler render output.pptx preview/ --pages 1,3,5
+```
+
+### MCP vs Script Workflow Mapping
+
+| Script (`scripts/`) | MCP Tool | Key Difference |
+|---------------------|----------|----------------|
+| `extract_pptx.py <in> <out>` | `extract_pptx(template_path)` | Returns dict directly, no file I/O |
+| `apply_pptx.py <in> <changes> <out>` | `apply_pptx(template, changes, output)` | `changes` is a list param, not a file |
+| `verify_pptx.py <file>` | `verify_pptx(filepath)` | Same |
+| `verify_parity.py <orig> <out> <changes>` | `verify_parity_tool(orig, out, changes)` | `changes` is a list param |
+| `render_preview.py <file> <dir> --pages` | `render_preview(file, dir, pages)` | Same |
+
+The content_map format, ID scheme, and output semantics are identical between
+scripts and MCP tools. An agent can switch between them transparently.
