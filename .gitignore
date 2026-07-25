@@ -10,6 +10,9 @@ venv/
 *.pptx
 *.docx
 *.pdf
+# Exception: test fixtures are source-controlled
+!tests/fixtures/*.pptx
+!tests/fixtures/*.docx
 work/
 *.content_map.json
 *_map.json
