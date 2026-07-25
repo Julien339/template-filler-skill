@@ -1,0 +1,38 @@
+[project]
+name = "template-filler-mcp"
+version = "0.1.0"
+description = "MCP server for filling existing PPTX/DOCX templates with new content while preserving formatting"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=1.0.0",
+    "pydantic>=2",
+    "typer>=0.12",
+    "python-pptx>=0.6.23",
+    "python-docx>=1.2.0",
+    "lxml>=4.9",
+    "pymupdf>=1.23",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.14"]
+
+[project.scripts]
+template-filler-mcp = "template_filler_mcp.server:main"
+template-filler = "template_filler_mcp.cli:app"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["template_filler_mcp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
