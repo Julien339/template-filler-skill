@@ -96,6 +96,65 @@ new client's info" alongside the file). It will extract the current
 content, propose changes, show you a diff, and only write the new file once
 you approve.
 
+## Using it as an MCP server
+
+The skill is also available as a standalone **MCP (Model Context Protocol)
+server** that works with any MCP-compatible client (Claude Desktop, VS Code
+Copilot, Cline, etc.) — no shell script execution needed.
+
+### Installation
+
+```bash
+pip install -e /path/to/template-filler-skill
+```
+
+### Configuration
+
+Add to your MCP client's configuration file:
+
+```json
+{
+  "mcpServers": {
+    "template-filler": {
+      "command": "template-filler-mcp",
+      "args": []
+    }
+  }
+}
+```
+
+Or run the server directly:
+
+```bash
+python -m template_filler_mcp.server
+```
+
+### Available MCP Tools
+
+The MCP server exposes 8 tools matching the 4-stage pipeline:
+
+| Tool | Description |
+|------|-------------|
+| `extract_pptx` / `extract_docx` | Extract all text runs as structured JSON |
+| `apply_pptx` / `apply_docx` | Write changes to specific runs, preserving formatting |
+| `verify_pptx` / `verify_docx` | Check structural/XML integrity |
+| `verify_parity_tool` | Verify output matches original except requested changes |
+| `render_preview` | Render slides/pages to PNG (requires LibreOffice) |
+
+### Standalone CLI
+
+A command-line interface is also included:
+
+```bash
+template-filler extract pptx template.pptx
+template-filler apply pptx template.pptx --changes changes.json output.pptx
+template-filler verify pptx output.pptx
+template-filler parity original.pptx output.pptx --changes changes.json
+template-filler render output.pptx preview/ --pages 1,3,5
+```
+
+See `SKILL.md` for the complete MCP workflow documentation.
+
 ## Using the scripts directly
 
 The pipeline is plain Python and works outside of any agent, too:
