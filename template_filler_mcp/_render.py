@@ -12,6 +12,8 @@ import shutil
 import subprocess
 from typing import Any
 
+from ._path_validation import validate_input_file, validate_output_directory
+
 SOFFICE_CANDIDATES = [
     "soffice",
     r"C:\Program Files\LibreOffice\program\soffice.exe",
@@ -47,6 +49,9 @@ def render_preview_pages(
         {"ok": True, "rendered": ["path1.png", ...]}
         or {"ok": False, "skipped_reason": "soffice not found"}
     """
+    validated_file = validate_input_file(filepath, allowed_extensions=(".pptx", ".docx"))
+    validated_output_dir = validate_output_directory(output_dir)
+
     soffice = _find_soffice()
     if not soffice:
         return {
@@ -54,14 +59,14 @@ def render_preview_pages(
             "skipped_reason": "LibreOffice (soffice) not found. Install with: apt install libreoffice",
         }
 
-    ext = os.path.splitext(filepath)[1].lower()
+    ext = os.path.splitext(str(validated_file))[1].lower()
     label = "slide" if ext == ".pptx" else "page"
 
-    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(str(validated_output_dir), exist_ok=True)
 
     try:
         subprocess.run(
-            [soffice, "--headless", "--convert-to", "pdf", "--outdir", output_dir, filepath],
+            [soffice, "--headless", "--convert-to", "pdf", "--outdir", str(validated_output_dir), str(validated_file)],
             check=True,
             capture_output=True,
             timeout=120,
@@ -73,7 +78,7 @@ def render_preview_pages(
     except FileNotFoundError:
         return {"ok": False, "skipped_reason": "soffice binary not found"}
 
-    pdf_path = os.path.join(output_dir, os.path.splitext(os.path.basename(filepath))[0] + ".pdf")
+    pdf_path = os.path.join(str(validated_output_dir), os.path.splitext(os.path.basename(str(validated_file)))[0] + ".pdf")
 
     try:
         import fitz
@@ -87,7 +92,7 @@ def render_preview_pages(
         if pages is not None and page_num not in pages:
             continue
         pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
-        out_png = os.path.join(output_dir, f"{label}{page_num}.png")
+        out_png = os.path.join(str(validated_output_dir), f"{label}{page_num}.png")
         pix.save(out_png)
         out_paths.append(out_png)
     doc.close()

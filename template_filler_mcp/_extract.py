@@ -16,6 +16,8 @@ from docx.text.paragraph import Paragraph
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
+from ._path_validation import validate_input_file
+
 # ── shared: merged-table-cell deduplication ────────────────────────────
 
 
@@ -97,7 +99,9 @@ def extract_pptx_content(template_path: str) -> dict[str, Any]:
 
     Merged table cells are deduplicated — only the merge-origin cell is emitted.
     """
-    prs = Presentation(template_path)
+    validated_path = validate_input_file(template_path, allowed_extensions=(".pptx",))
+
+    prs = Presentation(str(validated_path))
 
     slides_out = []
     for si, slide in enumerate(prs.slides):
@@ -107,7 +111,7 @@ def extract_pptx_content(template_path: str) -> dict[str, Any]:
 
     content_map = {
         "format": "pptx",
-        "source": template_path,
+        "source": str(validated_path),
         "slide_count": len(prs.slides),
         "slides": slides_out,
     }
@@ -184,7 +188,9 @@ def extract_docx_content(template_path: str) -> dict[str, Any]:
     Merged table cells are deduplicated. Field-coded runs (auto-fields like
     dates, page numbers, TOC entries) are flagged as read-only.
     """
-    doc = Document(template_path)
+    validated_path = validate_input_file(template_path, allowed_extensions=(".docx",))
+
+    doc = Document(str(validated_path))
 
     body_runs = []
     for bi, block in enumerate(doc.iter_inner_content()):
@@ -200,7 +206,7 @@ def extract_docx_content(template_path: str) -> dict[str, Any]:
 
     content_map = {
         "format": "docx",
-        "source": template_path,
+        "source": str(validated_path),
         "section_count": len(doc.sections),
         "body_runs": body_runs,
         "header_footer_runs": header_footer_runs,

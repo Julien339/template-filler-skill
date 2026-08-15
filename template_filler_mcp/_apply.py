@@ -15,6 +15,10 @@ from docx.text.paragraph import Paragraph
 from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 
+from ._path_validation import validate_input_file, validate_output_file
+
+from ._path_validation import validate_input_file, validate_output_file
+
 # ── shared helpers ─────────────────────────────────────────────────────
 
 
@@ -103,7 +107,11 @@ def apply_pptx_changes(template_path: str, changes: list[dict[str, str]], output
     Returns:
         {"applied": N, "total": M, "failed": [...], "output_path": "..."}
     """
-    prs = Presentation(template_path)
+    # Validate paths for security
+    validated_template = validate_input_file(template_path, allowed_extensions=('.pptx',))
+    validated_output = validate_output_file(output_path, allowed_extensions=('.pptx',))
+
+    prs = Presentation(str(validated_template))
     applied, errors = 0, []
     for change in changes:
         try:
@@ -112,13 +120,13 @@ def apply_pptx_changes(template_path: str, changes: list[dict[str, str]], output
         except Exception as e:
             errors.append({"id": change["id"], "error": str(e)})
 
-    prs.save(output_path)
+    prs.save(str(validated_output))
 
     result = {
         "applied": applied,
         "total": len(changes),
         "failed": errors,
-        "output_path": output_path,
+        "output_path": str(validated_output),
     }
     return result
 
@@ -176,7 +184,11 @@ def apply_docx_changes(template_path: str, changes: list[dict[str, str]], output
     Returns:
         {"applied": N, "total": M, "failed": [...], "output_path": "..."}
     """
-    doc = Document(template_path)
+    # Validate paths for security
+    validated_template = validate_input_file(template_path, allowed_extensions=('.docx',))
+    validated_output = validate_output_file(output_path, allowed_extensions=('.docx',))
+
+    doc = Document(str(validated_template))
     blocks = list(doc.iter_inner_content())
 
     applied, errors = 0, []
@@ -187,12 +199,12 @@ def apply_docx_changes(template_path: str, changes: list[dict[str, str]], output
         except Exception as e:
             errors.append({"id": change["id"], "error": str(e)})
 
-    doc.save(output_path)
+    doc.save(str(validated_output))
 
     result = {
         "applied": applied,
         "total": len(changes),
         "failed": errors,
-        "output_path": output_path,
+        "output_path": str(validated_output),
     }
     return result

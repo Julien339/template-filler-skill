@@ -12,6 +12,8 @@ from typing import Any
 
 from lxml import etree
 
+from ._path_validation import validate_input_file
+
 # ── OOXML namespaces ───────────────────────────────────────────────────
 
 A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
@@ -127,9 +129,11 @@ def verify_pptx_structure(filepath: str) -> dict[str, Any]:
     Returns {"ok": True, "problems": []} if the file is clean,
     or {"ok": False, "problems": [...]} with a list of issues.
     """
+    validated_path = validate_input_file(filepath, allowed_extensions=(".pptx",))
+
     problems = []
     try:
-        z = zipfile.ZipFile(filepath)
+        z = zipfile.ZipFile(str(validated_path))
     except (zipfile.BadZipFile, FileNotFoundError) as e:
         return {"ok": False, "problems": [f"cannot open as ZIP: {e}"]}
     with z:
@@ -139,7 +143,7 @@ def verify_pptx_structure(filepath: str) -> dict[str, Any]:
             _check_duplicate_singletons(parts, problems, _pptx_target_filter, PPTX_SINGLETON_CHILDREN)
             _check_illegal_chars(parts, problems, _pptx_target_filter)
         _check_media_rels_pptx(z, problems)
-    _check_opens_with_python_pptx(filepath, problems)
+    _check_opens_with_python_pptx(str(validated_path), problems)
 
     return {"ok": len(problems) == 0, "problems": problems}
 
@@ -193,9 +197,11 @@ def verify_docx_structure(filepath: str) -> dict[str, Any]:
     Returns {"ok": True, "problems": []} if the file is clean,
     or {"ok": False, "problems": [...]} with a list of issues.
     """
+    validated_path = validate_input_file(filepath, allowed_extensions=(".pptx",))
+
     problems = []
     try:
-        z = zipfile.ZipFile(filepath)
+        z = zipfile.ZipFile(str(validated_path))
     except (zipfile.BadZipFile, FileNotFoundError) as e:
         return {"ok": False, "problems": [f"cannot open as ZIP: {e}"]}
     with z:
@@ -205,6 +211,6 @@ def verify_docx_structure(filepath: str) -> dict[str, Any]:
             _check_duplicate_singletons(parts, problems, _docx_target_filter, DOCX_SINGLETON_CHILDREN)
             _check_illegal_chars(parts, problems, _docx_target_filter)
         _check_media_rels_docx(z, problems)
-    _check_opens_with_python_docx(filepath, problems)
+    _check_opens_with_python_docx(str(validated_path), problems)
 
     return {"ok": len(problems) == 0, "problems": problems}
